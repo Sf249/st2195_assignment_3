@@ -1,0 +1,35 @@
+#Example questions answered using Python
+
+#Q2
+SELECT tailnum
+FROM ontime
+WHERE cancelled = 0 AND diverted = 0
+GROUP BY tailnum
+ORDER BY AVG(dep_delay) ASC
+LIMIT 1;
+
+#Q3
+SELECT dest_city
+FROM ontime
+WHERE cancelled = 0 AND diverted = 0
+GROUP BY dest_city
+ORDER BY COUNT(*) DESC
+LIMIT 1;
+
+#Q4
+SELECT name AS company, 
+       SUM(cancelled) AS num_cancelled_flights
+FROM carriers
+JOIN ontime ON carriers.code = ontime.unique_carrier
+GROUP BY name
+ORDER BY num_cancelled_flights DESC
+LIMIT 1;
+
+#Q5
+SELECT name AS company,
+       CAST(SUM(cancelled) AS FLOAT) / COUNT(*) AS cancellation_rate
+FROM carriers
+JOIN ontime ON carriers.code = ontime.unique_carrier
+GROUP BY name
+ORDER BY cancellation_rate DESC
+LIMIT 1;
