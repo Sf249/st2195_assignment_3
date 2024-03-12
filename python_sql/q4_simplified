@@ -1,0 +1,9 @@
+#Simplified answer to Q4
+
+SELECT name AS company,
+       SUM(cancelled) AS num_cancelled_flights
+FROM carriers
+JOIN ontime ON carriers.code = ontime.unique_carrier
+GROUP BY name
+ORDER BY num_cancelled_flights DESC
+LIMIT 1;
