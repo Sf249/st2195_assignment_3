@@ -1,0 +1,111 @@
+#Example questions answered using DBI notations
+
+library(DBI)
+conn <- dbConnect(RSQLite::SQLite(), "airline2.db")
+
+#Q2
+query_airplane <- "
+    SELECT tailnum, 
+           AVG(dep_delay) AS avg_dep_delay
+    FROM ontime
+    WHERE cancelled = 0 AND diverted = 0
+    GROUP BY tailnum
+    ORDER BY avg_dep_delay ASC
+    LIMIT 1
+"
+result_airplane <- dbGetQuery(conn, query_airplane)
+dbDisconnect(conn)
+print(result_airplane)
+
+#Q3
+query_city <- "
+    SELECT dest_city, 
+           COUNT(*) AS num_inbound_flights
+    FROM ontime
+    WHERE cancelled = 0 AND diverted = 0
+    GROUP BY dest_city
+    ORDER BY num_inbound_flights DESC
+    LIMIT 1
+"
+result_city <- dbGetQuery(conn, query_city)
+dbDisconnect(conn)
+print(result_city)
+
+#Q4
+query_cancelled <- "
+    SELECT name AS company, 
+           SUM(cancelled) AS num_cancelled_flights
+    FROM carriers
+    JOIN ontime ON carriers.code = ontime.unique_carrier
+    GROUP BY name
+    ORDER BY num_cancelled_flights DESC
+    LIMIT 1
+"
+result_cancelled <- dbGetQuery(conn, query_cancelled)
+dbDisconnect(conn)
+print(result_cancelled)
+
+#Q5
+query <- "
+    SELECT name AS company, 
+           SUM(cancelled) AS num_cancelled_flights
+    FROM carriers
+    JOIN ontime ON carriers.code = ontime.unique_carrier
+    GROUP BY name
+    ORDER BY num_cancelled_flights DESC
+    LIMIT 1
+"
+result_dbi <- dbGetQuery(conn, query)
+dbDisconnect(conn)
+print(result_dbi)
+
+#Example questions answered using dplyr notations
+
+#Q2
+library(DBI)
+library(dplyr)
+
+conn <- dbConnect(RSQLite::SQLite(), "airline2.db")
+
+result_dplyr <- tbl(conn, "ontime") %>%
+    filter(cancelled == 0, diverted == 0) %>%
+    group_by(tailnum) %>%
+    summarize(avg_dep_delay = mean(dep_delay)) %>%
+    arrange(avg_dep_delay) %>%
+    slice(1)
+print(result_dplyr)
+
+#Q3
+result_dplyr <- tbl(conn, "ontime") %>%
+    filter(cancelled == 0, diverted == 0) %>%
+    group_by(dest_city) %>%
+    summarize(num_inbound_flights = n()) %>%
+    arrange(desc(num_inbound_flights)) %>%
+    slice(1)
+print(result_dplyr)
+
+#Q4
+result_dplyr <- tbl(conn, "carriers") %>%
+    inner_join(tbl(conn, "ontime"), by = c("code" = "unique_carrier")) %>%
+    group_by(name) %>%
+    summarize(num_cancelled_flights = sum(cancelled)) %>%
+    arrange(desc(num_cancelled_flights)) %>%
+    slice(1)
+print(result_dplyr)
+
+#Q5
+result_dplyr <- tbl(conn, "carriers") %>%
+    inner_join(tbl(conn, "ontime"), by = c("code" = "unique_carrier")) %>%
+    group_by(name) %>%
+    summarize(total_flights = n(),
+              num_cancelled_flights = sum(cancelled),
+              cancellation_rate = num_cancelled_flights / total_flights) %>%
+    arrange(desc(cancellation_rate)) %>%
+    slice(1)
+print(result_dplyr)
+
+
+
+
+
+
